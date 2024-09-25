@@ -15,8 +15,6 @@ public class WorldTemps {
 		
 		Reading maxTemp = ll.findMax();
 		Reading minTemp = ll.findMin();
-
-		
 				
 		System.out.println("max temperature was: " + maxTemp.getAvgTemp() +
 				" in " + maxTemp.getCity() + " on " + maxTemp.getMonth() + 
@@ -24,6 +22,9 @@ public class WorldTemps {
 		System.out.println("min temperature was: " + minTemp.getAvgTemp() +
 				" in " + minTemp.getCity() + " on " + minTemp.getMonth() + 
 				"/" + minTemp.getDay() + "/" + minTemp.getYear());
+		
+		ll.worldAvgByYear();
+		ll.usAvgByYear();
 		//ll.print();
 		
 		//System.out.println("done");
