@@ -8,6 +8,7 @@
 public class LinkedList {
 	private Reading head = null;
 	private Reading tail = null;
+	public static int maxYears = 30;
 
 	public void add(Reading element)
 	{
@@ -35,12 +36,12 @@ public class LinkedList {
 			current = current.getNext();
 		}
 	}
-	
+
 	public Reading findMax()
 	{
 		Reading maxTemp = head;
 		Reading current = head;
-		
+
 		while (current != null)
 		{
 			if (current.getAvgTemp() > maxTemp.getAvgTemp())
@@ -51,12 +52,12 @@ public class LinkedList {
 		}
 		return maxTemp;
 	}
-	
+
 	public Reading findMin()
 	{
 		Reading minTemp = head;
 		Reading current = head;
-		
+
 		while (current != null)
 		{
 			if (current.getAvgTemp() != -99.0)
@@ -71,4 +72,67 @@ public class LinkedList {
 		return minTemp;
 	}
 
-}
+	public void worldAvgByYear()
+	{
+		Reading current = head;
+		double[] totals = new double[maxYears];
+		int[] counts = new int[maxYears];
+		double[] avg = new double[maxYears];
+		int startYear = 1995;
+
+		while(current != null)
+		{
+			if (current.getAvgTemp() != -99)
+			{
+				int index = current.getYear() - startYear;
+				totals[index] += current.getAvgTemp();
+				counts[index]++;
+				avg[index] = totals[index] / counts[index];
+			}//end if
+			current = current.getNext();
+		} //end while loop
+
+		System.out.println("World Temps:");
+		System.out.println("Year - Average");
+		System.out.println("**************");
+		for (int x = 0; x < maxYears; x++)
+		{
+			System.out.println((x + startYear) + " - " + avg[x]);
+			
+		}//end for loop
+	}//end worldAvgByYear
+
+	public void usAvgByYear()
+	{
+		Reading current = head;
+		double[] totals = new double[maxYears];
+		int[] counts = new int[maxYears];
+		double[] avg = new double[maxYears];
+		int startYear = 1995;
+
+		while(current != null)
+		{
+			if (current.getCountry().equals("US"))
+			{
+				if (current.getAvgTemp() != -99)
+				{
+					int index = current.getYear() - startYear;
+					totals[index] += current.getAvgTemp();
+					counts[index]++;
+					avg[index] = totals[index]/counts[index];
+				}//end nested if
+			}//end initial if
+			current = current.getNext();
+		} //end while loop
+		System.out.println("\nUS Temps:");
+		System.out.println("Year - Average");
+		System.out.println("**************");
+		for (int x = 0; x < maxYears; x++)
+		{
+			System.out.println((x + startYear) + " - " + avg[x]);
+			//System.out.println(avg[x]);
+			
+		}//end for loop
+	}//end worldAvgByYear
+
+}//end LinkedList
