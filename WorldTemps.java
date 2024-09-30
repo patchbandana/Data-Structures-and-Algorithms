@@ -6,16 +6,29 @@ public class WorldTemps {
 
 	public static void main(String[] args) {
 		//Linked List Controls
-
+		
+		//comma seperated value file, already provided
 		String filename = "city_temperature.csv";
 		
+		//Creates new LinkedList object
 		LinkedList ll = new LinkedList();
 		
-		initialize(filename, ll);
+		//Feeds the file to the LinkedList class
+		int count = initialize(filename, ll);
 		
+		int bad = ll.deleteValue(-99);
+		
+		double percent = (double)bad/count * 100;
+		
+		//Statement used to display how many invalid values were found and tossed
+		System.out.println("Cleaning up " + bad + " values: " + percent + "%\n");
+		
+		//Finds the maximum temperature among all data
 		Reading maxTemp = ll.findMax();
+		//Finds the minimum temperature among all data after deleting.
 		Reading minTemp = ll.findMin();
 				
+		//Print statements
 		System.out.println("max temperature was: " + maxTemp.getAvgTemp() +
 				" in " + maxTemp.getCity() + " on " + maxTemp.getMonth() + 
 				"/" + maxTemp.getDay() + "/" + maxTemp.getYear());
@@ -23,18 +36,20 @@ public class WorldTemps {
 				" in " + minTemp.getCity() + " on " + minTemp.getMonth() + 
 				"/" + minTemp.getDay() + "/" + minTemp.getYear());
 		
+		//Finds average and displays 
 		ll.worldAvgByYear();
 		ll.usAvgByYear();
-		//ll.print();
+		//ll.print(); <-- prints every single temperature in the file
 		
 		//System.out.println("done");
 		//System.out.println("Head at " + head.getCity());
 	}
 
-	public static void initialize(String filename, LinkedList ll)
+	public static int initialize(String filename, LinkedList ll)
 	{
 		String line = "";
 		String splitBy = ",";
+		int count = 0;
 		try
 		{
 			//FileReader requests file from the operating system and returns the location/handle
@@ -44,7 +59,7 @@ public class WorldTemps {
 			
 			//Ignore first line of labels for data
 			line = br.readLine(); 
-			int count = 0;
+			
 
 			while (((line = br.readLine()) != null))
 				{
@@ -74,6 +89,8 @@ public class WorldTemps {
 		{
 			System.out.println("File Error: " + filename);
 		}
+		
+		return count;
 	}
 
 }
