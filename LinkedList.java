@@ -37,6 +37,34 @@ public class LinkedList {
 		}
 	}
 
+	/**
+	 * Deletes a value given by the user and returns the number of values deleted
+	 * @param value passed by user
+	 * @return count incremented per value deleted
+	 */
+	public int deleteValue(double value)
+	{
+		int count = 0;
+		Reading current = head;
+		Reading previous = current;
+		while (current != null)
+		{
+			if(current.getAvgTemp() == value)
+			{
+				previous.setNext(current.getNext());
+				current = current.getNext();
+				count++;
+			}
+			else 
+			{
+				previous = current;
+				current = current.getNext();
+			}
+		}
+
+		return count;
+	}
+
 	public Reading findMax()
 	{
 		Reading maxTemp = head;
@@ -60,7 +88,7 @@ public class LinkedList {
 
 		while (current != null)
 		{
-			if (current.getAvgTemp() != -99.0)
+			//if (current.getAvgTemp() != -99.0)
 			{
 				if (current.getAvgTemp() < minTemp.getAvgTemp())
 				{
@@ -98,7 +126,7 @@ public class LinkedList {
 		for (int x = 0; x < maxYears; x++)
 		{
 			System.out.println((x + startYear) + " - " + avg[x]);
-			
+
 		}//end for loop
 	}//end worldAvgByYear
 
@@ -131,7 +159,7 @@ public class LinkedList {
 		{
 			System.out.println((x + startYear) + " - " + avg[x]);
 			//System.out.println(avg[x]);
-			
+
 		}//end for loop
 	}//end worldAvgByYear
 
