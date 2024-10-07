@@ -8,14 +8,14 @@
 public class LinkedList {
 	private Client head = null;
 	private Client tail = null;
-	
+
 	public void add(Client element)
 	{
 		if (head == null)
 		{
 			head = element;
 			tail = element;
-			System.out.println("New head\n");
+			System.out.println("New head");
 		}
 		else 
 		{
@@ -24,14 +24,24 @@ public class LinkedList {
 			//System.out.println("Moving tail");
 		}
 	}
-		
-		public void print()
+
+	public Client find(long account)
+	{
+		Client current = head;
+		while ((current != null) && (current.getAccountNumber() != account))
 		{
-			Client current = head;
-			while (current.getNext() != null)
-			{
-				System.out.println(current.getFirstName() + " " + current.getLastName());
-				current = current.getNext();
-			}
+			current = current.getNext();
+		}
+		return current;
+	}
+
+	public void print()
+	{
+		Client current = head;
+		while (current.getNext() != null)
+		{
+			System.out.println(current.getFirstName() + " " + current.getLastName());
+			current = current.getNext();
 		}
 	}
+}
