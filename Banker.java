@@ -31,7 +31,7 @@ public class Banker {
 		initialize(filename, ll);
 
 		//ll.print();
-		
+
 		mainMenu(lobbyQueue, ll);
 	}
 
@@ -68,7 +68,6 @@ public class Banker {
 					System.out.println("Queue empty!");
 				break;
 			case 3:
-
 				break;
 			default:
 				System.out.println("Not a valid choice!\n\n");
@@ -102,12 +101,16 @@ public class Banker {
 			switch(choice)
 			{
 			case 1:
+				balance(client, ll);
 				break;
 			case 2:
+				deposit(client, ll);
 				break;
 			case 3:
+				withdrawal(client, ll);
 				break;
 			case 4:
+				closeAccount(client, ll);
 				break;
 			case 5: 
 				break;
@@ -118,61 +121,98 @@ public class Banker {
 		}
 	}
 
-	public static void menu(Queue lobbyQueue) {
-		Client client = new Client();
-		System.out.println("********************");
-		System.out.println("Account Number: ");
-		client.setAccountNumber(scanner.nextLong());
-		System.out.println("First Name: ");
-		client.setFirstName(scanner.next());
-		System.out.println("Last Name: ");
-		client.setLastName(scanner.next());
+	private static void closeAccount(Client client, LinkedList ll) {
 
-		lobbyQueue.add(client);
 
-		/*
+	}
+
+	private static void withdrawal(Client client, LinkedList ll) {
+
+
+	}
+
+	private static void deposit(Client client, LinkedList ll) {
+
+
+	}
+
+	private static void balance(Client client, LinkedList ll) {
+		Client fromList = ll.find(client.getAccountNumber());
+
+		if (fromList != null)
+		{
+			if ((client.getFirstName().equalsIgnoreCase(fromList.getFirstName())) &&
+					(client.getLastName().equalsIgnoreCase(fromList.getLastName())))
+			{
+				System.out.printf("\n\nCurrent Balance : $%1.2f\n\n", fromList.getBalance());
+			}
+			else
+			{
+				System.out.println("\n\n*** Identity does not match account! ***\n\n");
+			}
+		}
+		else 
+		{
+			System.out.println("\n\n *** Account number not found ***\n\n");
+		}
+	}
+
+
+public static void menu(Queue lobbyQueue) {
+	Client client = new Client();
+	System.out.println("********************");
+	System.out.println("Account Number: ");
+	client.setAccountNumber(scanner.nextLong());
+	System.out.println("First Name: ");
+	client.setFirstName(scanner.next());
+	System.out.println("Last Name: ");
+	client.setLastName(scanner.next());
+
+	lobbyQueue.add(client);
+
+	/*
 		System.out.println("Balance: ");
 		client.setBalance(scanner.nextDouble());
-		 */
+	 */
 
-	}
+}
 
-	public static void initialize(String filename, LinkedList ll)
+public static void initialize(String filename, LinkedList ll)
+{
+	String line = "";
+	String splitBy = ",";
+	int count = 0;
+	try
 	{
-		String line = "";
-		String splitBy = ",";
-		int count = 0;
-		try
+		//FileReader requests file from the operating system and returns the location/handle
+		FileReader fr = new FileReader(filename);
+		//BufferedReader allows you to operate with the data in the file
+		BufferedReader br = new BufferedReader(fr);
+
+		while (((line = br.readLine()) != null))
 		{
-			//FileReader requests file from the operating system and returns the location/handle
-			FileReader fr = new FileReader(filename);
-			//BufferedReader allows you to operate with the data in the file
-			BufferedReader br = new BufferedReader(fr);
-
-			while (((line = br.readLine()) != null))
-			{
-				String[] data = line.split(splitBy);
-				long accountNumber = Long.parseLong(data[0]);
-				String firstName = data[1];
-				String lastName = data[2];
-				double balance = Double.parseDouble(data[3]);
+			String[] data = line.split(splitBy);
+			long accountNumber = Long.parseLong(data[0]);
+			String firstName = data[1];
+			String lastName = data[2];
+			double balance = Double.parseDouble(data[3]);
 
 
-				//Creates a new reading of the file
-				Client c = new Client(accountNumber, firstName, lastName, balance);
+			//Creates a new reading of the file
+			Client c = new Client(accountNumber, firstName, lastName, balance);
 
-				//Adds the reading to the Linked List, looping through until the end of the file
-				ll.add(c);
-				count++;
+			//Adds the reading to the Linked List, looping through until the end of the file
+			ll.add(c);
+			count++;
 
-			}
-			System.out.println(count + " records read.\n");
-
-			br.close();
 		}
-		catch(IOException e)
-		{
-			System.out.println("File Error: " + filename);
-		}
+		System.out.println(count + " records read.\n");
+
+		br.close();
 	}
+	catch(IOException e)
+	{
+		System.out.println("File Error: " + filename);
+	}
+}
 }

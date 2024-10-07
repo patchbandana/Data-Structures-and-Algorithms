@@ -25,6 +25,10 @@ public class Queue {
 		}
 	}
 	
+	/**
+	 * 
+	 * @return c
+	 */
 	public Client serve()
 	{
 		Client current = head;
@@ -33,6 +37,10 @@ public class Queue {
 		return current;
 	}
 	
+	/**Checks for more Clients.
+	 * 
+	 * @return head
+	 */
 	public Client peek()
 	{
 		return head;
