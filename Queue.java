@@ -15,7 +15,7 @@ public class Queue {
 		{
 			head = element;
 			tail = element;
-			System.out.println("New head\n");
+			//System.out.println("New head\n");
 		}
 		else 
 		{
