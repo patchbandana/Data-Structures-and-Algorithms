@@ -15,7 +15,7 @@ public class LinkedList {
 		{
 			head = element;
 			tail = element;
-			System.out.println("New head");
+			//System.out.println("New head");
 		}
 		else 
 		{
@@ -43,5 +43,13 @@ public class LinkedList {
 			System.out.println(current.getFirstName() + " " + current.getLastName());
 			current = current.getNext();
 		}
+	}
+
+	public Client getFirst() {
+		return head;
+	}
+
+	public void setFirst(Client next) {
+		head = next;
 	}
 }
