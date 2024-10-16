@@ -43,9 +43,9 @@ public class Banker {
 
 	public static void mainMenu(Queue lobbyQueue, LinkedList ll, String outFile) {
 
-		int choice = 0;
+		String choice = "0";
 
-		while (choice != 3)
+		while (!choice.equalsIgnoreCase("3"))
 		{
 			System.out.println("\n\n*******************");
 			System.out.println("*** MAIN MENU *****");
@@ -57,14 +57,14 @@ public class Banker {
 			System.out.println("*******************");
 			System.out.print("\tCHOICE: ");
 
-			choice = scanner.nextInt();
+			choice = scanner.next();
 
 			switch(choice)
 			{
-			case 1:
+			case "1":
 				menu(lobbyQueue);
 				break;
-			case 2:
+			case "2":
 				if (lobbyQueue.peek() != null)
 				{
 					Client client = lobbyQueue.serve();
@@ -73,7 +73,7 @@ public class Banker {
 				else 
 					System.out.println("Queue empty!");
 				break;
-			case 3:
+			case "3":
 				export(outFile, ll);
 				break;
 			default:
@@ -85,9 +85,9 @@ public class Banker {
 
 	public static void tellerMenu(Client client, LinkedList ll)
 	{
-		int choice = 0;
+		String choice = "0";
 
-		while (choice != 5)
+		while (!choice.equalsIgnoreCase("5"))
 		{
 			System.out.println("*******************");
 			System.out.println("***TELLER WINDOW***");
@@ -103,23 +103,23 @@ public class Banker {
 			System.out.println("*******************");
 			System.out.print("\tCHOICE: ");
 
-			choice = scanner.nextInt();
+			choice = scanner.next();
 
 			switch(choice)
 			{
-			case 1:
+			case "1":
 				balance(client, ll);
 				break;
-			case 2:
+			case "2":
 				deposit(client, ll);
 				break;
-			case 3:
+			case "3":
 				withdrawal(client, ll);
 				break;
-			case 4:
+			case "4":
 				closeAccount(client, ll);
 				break;
-			case 5: 
+			case "5": 
 				break;
 			default:
 				System.out.println("Not a valid choice!\n\n");
@@ -178,7 +178,7 @@ public class Banker {
 			{
 				System.out.print("Amount to withdraw: $");
 				double withdrawal = scanner.nextDouble();
-				if (withdrawal <= fromList.getAccountNumber())
+				if (withdrawal <= fromList.getBalance())
 				{
 					fromList.setBalance(fromList.getBalance() - withdrawal);
 				}
@@ -269,7 +269,7 @@ public class Banker {
 			while (client != null)
 			{
 				System.out.println("Exporting " + client.getAccountNumber());
-				String outString = String.format("%d, %s, %s, %1.2f", client.getAccountNumber(), 
+				String outString = String.format("%d, %s, %s, %1.2f\n", client.getAccountNumber(), 
 						client.getFirstName(), client.getLastName(), client.getBalance());
 				writeToFile.write(outString);
 				outCount++;
