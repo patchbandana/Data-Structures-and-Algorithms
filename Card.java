@@ -9,8 +9,22 @@ public class Card {
 	private String number = "";
 	private char suit = ' ';
 	private int value = 0;
-	private Card next;
+	private Card next = null;
 
+
+	/**Gets the next Card in the Stack.
+	 * @return the next Card
+	 */
+	public Card getNext() {
+		return next;
+	}
+
+	/**Sets the next Card in the Stack
+	 * @param next the next to set
+	 */
+	public void setNext(Card next) {
+		this.next = next;
+	}
 
 	/**Card constructor with all parameters. Reusable for other games.
 	 * @param number
