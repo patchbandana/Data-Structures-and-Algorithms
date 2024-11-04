@@ -3,8 +3,11 @@
  * Purpose: Akinator type/20 Questions game
  */
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**Akinator style question guessing game.
@@ -20,10 +23,14 @@ public class Guess {
 		Scanner scanner = new Scanner(System.in);
 		tree.root.question = "Elephant";
 		String dataFile = "data.csv";
+		
+		Node current = tree.root;
+		
+		importTree(dataFile);
 
 		boolean playing = true;
 
-		Node current = tree.root;
+		
 		String outstring = "";
 		String response = "";
 		char answer = ' ';
@@ -32,7 +39,7 @@ public class Guess {
 		{
 			if (tree.isLeaf(current))
 			{
-				outstring = "Are you a/an " + current.question;
+				outstring = "Are you a " + current.question + "?";
 			}
 			else
 			{
@@ -50,10 +57,6 @@ public class Guess {
 				{
 					System.out.println("I am so smart. I bet I can beat you again. \n");
 					playing = false;
-
-					//Play again
-					current = tree.root;
-					System.out.println("\n\nLet's play again!");
 				}
 				else
 					current = current.yes;
@@ -64,11 +67,12 @@ public class Guess {
 				{
 					scanner.nextLine(); // clear buffer
 					System.out.println("What is your animal?");
-					String animal = scanner.nextLine();
+					String animal = scanner.next();
+					scanner.nextLine(); // clear buffer
 					System.out.println("Enter a question that determines a " + animal +
 							" from a " + current.question + ".");
 					String newQuestion = scanner.nextLine();
-					System.out.println("Is the answer for a/an " + animal 
+					System.out.println("Is the answer for a " + animal 
 							+ " yes or no? (Y/N) > ");
 					String yesNo = scanner.nextLine();
 
@@ -77,10 +81,10 @@ public class Guess {
 
 					current.question = newQuestion;
 
-					if (yesNo.equalsIgnoreCase("y"))
+					if (yesNo.charAt(0) == 'y' || yesNo.charAt(0) == 'Y')
 					{
-						current.yes = oldAnimal;
-						current.no = newAnimal;
+						current.yes = newAnimal;
+						current.no = oldAnimal;
 					}
 					else
 					{
@@ -91,6 +95,7 @@ public class Guess {
 					current = tree.root;
 					System.out.println("\n\nLet's play again!");
 				}
+				
 				else 
 					current = current.no;
 				break;
@@ -105,12 +110,29 @@ public class Guess {
 				break;
 			}
 		}//end while
+		deleteFile(dataFile);
 		exportTree(tree.root, 1, dataFile);
 		System.out.println("Goodbye.");
 		scanner.close();
 	} //end main
-
-	//TODO: Add prepFile function
+	
+	/**deletefile prepares the output file for exporting by splitting,
+	 * 	parsing, and reading in the data.
+	 * 
+	 * @param dataFile
+	 */
+	private static void deleteFile(String dataFile)
+	{
+		try
+		{
+			FileWriter fw = new FileWriter(dataFile, false);
+			fw.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("File Write Error: " + dataFile);
+		}
+	}
 
 	public static void exportTree (Node r, int nodeID, String dataFile)
 	{
@@ -123,6 +145,41 @@ public class Guess {
 		if (r.no != null)
 		{
 			exportTree(r.no, nodeID * 2 + 1, dataFile);
+		}
+	}
+	
+	public static void importTree(String dataFile)
+	{
+		try
+		{
+			FileReader fr = new FileReader(dataFile);
+			BufferedReader br = new BufferedReader(fr);
+			
+			String line = "";
+			String splitBy = ",";
+			String[] data;
+			ArrayList<String> questions = new ArrayList<>();
+			
+			while ((line = br.readLine()) != null)
+			{
+				data = line.split(splitBy);
+				
+				int index = Integer.parseInt(data[0]);
+				
+				if (questions.size() < index + 1)
+				{
+					for (int i = questions.size(); i <= index; i++)
+					{
+						questions.add("");
+					}
+				}
+				questions.set(index, data[1]);
+			}
+			br.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("File Read Error: " + dataFile);
 		}
 	}
 
