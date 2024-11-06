@@ -8,13 +8,19 @@ import java.util.Random;
  */
 public class War {
 
-	/**The main program for initiating War.
+	public static String p1Name = "P1";
+	public static String p2Name = "P2";
+	public static int numberOfPlayers = 2;
+	public static int numberOfCards = 52;
+	public static int round = 0;
+	public static int maxRound = 999;
+
+	/**The main program for initiating War game, creates stacks
+	 * and initiates the the deck.
 	 * @param args NOT USED
 	 */
 	public static void main(String[] args) {
-		int numberOfPlayers = 2;
-		int numberOfCards = 52;
-
+		boolean running = true;
 		//Declare a new Deck of Cards of standard size
 		Card[] deck = new Card[numberOfCards];
 		//Makes a deck of cards
@@ -24,18 +30,36 @@ public class War {
 		shuffle(deck);
 		shuffle(deck);
 		shuffle(deck);
-		
+
 		//Player 1 and 2 Stacks
 		Stack p1stack = new Stack();
 		Stack p2stack = new Stack();
-		
+
 		//Winning condition stacks
 		Stack w1stack = new Stack();
 		Stack w2stack = new Stack();
-		
+
 		/*Deals out the entire deck to both players equally, one player gets odds
 			and the other even numbered cards*/
 		deal(deck, p1stack, p2stack);
+
+		System.out.println("### P1 STACK:");
+		printStack(p1stack);
+		System.out.println("### P2 STACK:");
+		printStack(p2stack);
+
+		while (running && round < maxRound) 
+		{
+			System.out.println("### ROUND " + round);
+			playHands(p1stack, p2stack, w1stack, w2stack);
+			checkEmpty(p1stack, w1stack, p1Name, p2Name);
+			checkEmpty(p2stack, w2stack, p2Name, p1Name);
+		}
+		
+		if (round >= maxRound)
+		{
+			System.out.println("It's a draw. :/");
+		}
 	}
 
 	private static Card[] makeDeck(int numberOfCards) {
@@ -46,29 +70,30 @@ public class War {
 		//Checks for which suit the card is
 		for (int suit = 0; suit <= 3; suit++)
 		{
-				String number = "";
-				char symbol = switch (suit) 
-						{
-						case 0 -> '\u2660';
-						case 1 -> '\u2666';
-						case 2 -> '\u2663';
-						case 3 -> '\u2764';
-						default -> ' ';
-						};
+			String n = "";
+			char symbol = ' ';
 
-						for(int val = 2; val <= 14; val++)
-						{
-							number = switch (val) {
-							case 11 -> "J";
-							case 12 -> "K";
-							case 13 -> "Q";
-							case 14 -> "A";
-							default -> "" + val;
-							};
-							Card card = new Card(number, symbol, val);
-							deck[cardIndex] = card;
-							cardIndex++;
-						}
+			symbol = switch (suit) {
+			case 0 -> '\u2660'; // SPADE
+			case 1 -> '\u2666'; // DIAMOND
+			case 2 -> '\u2663'; // CLUB
+			case 3 -> '\u2764'; // HEART
+			default -> ' ';
+			};
+
+			for(int val = 2; val <= 14; val++)
+			{
+				n = switch (val) {
+				case 11 -> "J";
+				case 12 -> "Q";
+				case 13 -> "K";
+				case 14 -> "A";
+				default -> "" + val;
+				};
+				Card card = new Card(n, symbol, val);
+				deck[cardIndex] = card;
+				cardIndex++;
+			}
 		}
 		return deck;
 	}
@@ -92,46 +117,185 @@ public class War {
 			p2stack.push(c2);
 		}
 	}
-	
-	/* void checkEmpty(Stack p1hand, Stack p1win)
-	 * 	if (pstack.isEmpty() && wstack.IsEmpty()) {
-	 * 		print
-	 * 		print
-	 * 		print
-	 * 		exit
-	 * 	else if (pstack.isEmpty()) {
-	 * 		while p1win is not empty 
-	 * 			pop from the winstack
-	 * 			push that card to p1hand
-	 * 		end while
-	 * 	if p1hand is empty & p1win is empty,
-	 * 		then the other player has won
-	 * 
-	 * void playHands(Stack p1hand, Stack p2hand, Stack p1Win, Stack p2Win)
-	 * while:
-	 * 	check empty on p1 & p2 stacks
-	 * 	then pop card1 and card2 from each
-	 * 	get values of each & compare
-	 * 		if v1 > v2
-	 * 			push (card1, card 2 to p1winstack)
-	 * 		else if v1 < v2
-	 * 			push (card 2, card 1 to p2winstack)
-	 * 		else its a tie
-	 * 			tied = true
-	 * 			while tied
-	 * 				push cards onto center stack
-	 * 				if cards are tied, continue,
-	 * 					else tied = false
-	 * 					push card1, card2 to the winner
-	 * 					and move the center stack to the winner
-	 * end while
-	 * 
-	 * private void moveStack(Stack winningStack, Stack getAll)
-	 * 	while (!getAll.isEmpty())
-	 * 		Card card = (Card getAll.pop();
-	 * 		if (card == null)
-	 * 			return
-	 * 	winningStack.push(Card)
-	 *getAll is the name for the center tie stack pot
+
+	private static void playHands(Stack p1stack, Stack p2stack, Stack w1stack, Stack w2stack) {
+		checkEmpty(p1stack, w1stack, p1Name, p2Name);
+		checkEmpty(p2stack, w2stack, p2Name, p1Name);
+		round++;
+		Card c1 = p1stack.pop();
+		Card c2 = p2stack.pop();
+
+		System.out.printf(
+				"%s%s\t%s%s\n",
+				c1.getNumber(),
+				c1.getSuit(),
+				c2.getNumber(),
+				c2.getSuit());
+
+		int valP1 = c1.getValue();
+		int valP2 = c2.getValue();
+		Stack getAll = new Stack();
+
+		if (valP1 > valP2) {
+			// Push to P1's collection.
+			System.out.println(" ^");
+			w1stack.push(c1);
+			w1stack.push(c2);
+			System.out.println(p1Name + " +2 CARDS");
+		} else if (valP1 < valP2) {
+			// Push to P2's collection.
+			System.out.println("\t^");
+			w2stack.push(c2);
+			w2stack.push(c1);
+			System.out.println(p2Name + " +2 CARDS");
+		} else {
+			// We have a tie!
+			System.out.println("We have a tie!");
+			System.out.println("THIS");
+			System.out.println("MEANS");
+			System.out.println("WAR!!");
+			boolean playing = true;
+			while (playing)
+			{
+				checkEmpty(p1stack, w1stack, p1Name, p2Name);
+				checkEmpty(p2stack, w2stack, p2Name, p1Name);
+				
+				getAll.push(c1);
+				getAll.push(c2);
+
+				checkEmpty(p1stack, w1stack, p1Name, p2Name);
+				checkEmpty(p2stack, w2stack, p2Name, p1Name);
+				Card t1 = p1stack.pop();
+				Card t2 = p2stack.pop();
+				getAll.push(t2);
+				getAll.push(t1);
+
+				System.out.printf(
+						"%s%s\t%s%s\n",
+						t1.getNumber(),
+						t1.getSuit(),
+						t2.getNumber(),
+						t2.getSuit());
+
+				checkEmpty(p1stack, w1stack, p1Name, p2Name);
+				checkEmpty(p2stack, w2stack, p2Name, p1Name);
+				Card t3 = p2stack.pop();
+				Card t4 = p1stack.pop();
+
+				getAll.push(t4);
+				getAll.push(t3);
+
+
+				System.out.printf(
+						"%s%s\t%s%s\n",
+						t3.getNumber(),
+						t3.getSuit(),
+						t4.getNumber(),
+						t4.getSuit());
+
+				checkEmpty(p1stack, w1stack, p1Name, p2Name);
+				checkEmpty(p2stack, w2stack, p2Name, p1Name);
+				Card t6 = p1stack.pop();
+				Card t5 = p2stack.pop();
+
+				valP1 = t6.getValue();
+				valP2 = t5.getValue();
+
+				System.out.printf(
+						"%s%s\t%s%s\n",
+						t6.getNumber(),
+						t6.getSuit(),
+						t5.getNumber(),
+						t5.getSuit());
+
+				if (valP1 > valP2) {
+					// Push to P1's collection.
+					System.out.println(" ^");
+					moveStack(getAll, w1stack);
+					w1stack.push(t5);
+					w1stack.push(t6);
+					System.out.println(p1Name + " +8 CARDS");
+					playing = false;
+				} else if (valP1 < valP2) {
+					// Push to P2's collection.
+					System.out.println("\t^");
+					moveStack(getAll, w2stack);
+					w2stack.push(t6);
+					w2stack.push(t5);
+					System.out.println(p2Name + " +8 CARDS");
+					playing = false;
+				} else {
+					// We have a tie!
+					playing = false;
+					System.out.println("We have another tie!");
+					checkEmpty(p1stack, w1stack, p1Name, p2Name);
+					checkEmpty(p2stack, w2stack, p2Name, p1Name);
+					playHands(p1stack, p2stack, w1stack, w2stack);
+				}
+			}
+		}
+	}
+
+	/**
+	 * This method checks whether a player has lost the game.
+	 * If their pstack is empty but their wstack is not, then
+	 * the win stack is flipped onto the play stack.
+	 *
+	 * This method can terminate the program.
+	 *
+	 * @param pstack:       Player's play stack.
+	 * @param wstack:       Player's win stack.
+	 * @param playerName:   Player's name.
+	 * @param opponentName: Opponent's name.
 	 */
+	private static void checkEmpty(Stack pstack, Stack wstack, String playerName, String opponentName) {
+		if (pstack.empty() && wstack.empty()) {
+			System.out.println("Player " + playerName + " is out of cards!");
+			System.out.println("Player " + opponentName + " wins the game!");
+			System.out.println("Terminating the program. :)");
+			System.exit(0); // EXIT.
+		} else if (pstack.empty()) {
+			System.out.println("Flipping stack for " + playerName + ".");
+			int i = 0;
+			while (wstack.notEmpty()) {
+				i++;
+				Card card = (Card) wstack.pop();
+				pstack.push(card);
+			}
+			System.out.println(playerName + " CARDS REMAINING: " + i);
+		}
+	}
+
+	/** UNUSED
+	 * Moves cards from one stack to another.
+	 *
+	 * @param from: Stack to move from.
+	 * @param to:   Stack to move to.
+	 */
+	private static void moveStack(Stack from, Stack to) {
+		while (from.notEmpty()) {
+			Card card = from.pop();
+			to.push(card);
+		}
+	}
+
+	/**
+	 * Prints a stack without altering it.
+	 *
+	 * @param stack
+	 */
+	private static void printStack(Stack stack) {
+		Stack acc = new Stack();
+		while (stack.notEmpty()) {
+			Card c = stack.pop();
+			System.out.println(c.getNumber() + c.getSuit());
+			acc.push(c);
+		}
+
+		while (acc.notEmpty()) {
+			Card c = acc.pop();
+			stack.push(c);
+		}
+	}
+
 }
