@@ -20,13 +20,19 @@ public class Guess {
 	 */
 	public static void main(String[] args) {
 		Tree tree = new Tree();
+		
 		Scanner scanner = new Scanner(System.in);
-		tree.root.question = "Elephant";
+		//tree.root.question = "Elephant";
 		String dataFile = "data.csv";
+		importTree(tree, dataFile);
+		
+		if (tree.root == null) {
+		    // Fallback: initialize with a default node if the root is missing
+		    System.out.println("Root node not found in data file, initializing default root node.");
+		    tree.root = new Node("Elephant");  // Default initial question or animal
+		}
 		
 		Node current = tree.root;
-		
-		importTree(dataFile);
 
 		boolean playing = true;
 
@@ -110,29 +116,10 @@ public class Guess {
 				break;
 			}
 		}//end while
-		deleteFile(dataFile);
 		exportTree(tree.root, 1, dataFile);
 		System.out.println("Goodbye.");
 		scanner.close();
 	} //end main
-	
-	/**deletefile prepares the output file for exporting by splitting,
-	 * 	parsing, and reading in the data.
-	 * 
-	 * @param dataFile
-	 */
-	private static void deleteFile(String dataFile)
-	{
-		try
-		{
-			FileWriter fw = new FileWriter(dataFile, false);
-			fw.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("File Write Error: " + dataFile);
-		}
-	}
 
 	public static void exportTree (Node r, int nodeID, String dataFile)
 	{
@@ -148,7 +135,7 @@ public class Guess {
 		}
 	}
 	
-	public static void importTree(String dataFile)
+	public static void importTree(Tree tree, String dataFile)
 	{
 		try
 		{
@@ -157,26 +144,65 @@ public class Guess {
 			
 			String line = "";
 			String splitBy = ",";
-			String[] data;
-			ArrayList<String> questions = new ArrayList<>();
+			ArrayList<Node> questions = new ArrayList<>();
+			
+			/*
+			 * Initialize the array list with null values up to an index
+			 * 	placeholder. Index 0 will be unused for 1-based indexing
+			 */
+			
+			questions.add(null);
+			
 			
 			while ((line = br.readLine()) != null)
 			{
-				data = line.split(splitBy);
+				String[] data = line.split(splitBy);
 				
-				int index = Integer.parseInt(data[0]);
+				/*
+				 * Learned about trim method while googling the problem
+				 * This eliminates the need to clear the buffer like with 
+				 * the user input in the main method.
+				 */
 				
-				if (questions.size() < index + 1)
+				int index = Integer.parseInt(data[0].trim());
+				String question = data[1].trim();
+				
+				//Ensures the list is large enough for current index
+				while (questions.size() <= index)
 				{
-					for (int i = questions.size(); i <= index; i++)
-					{
-						questions.add("");
-					}
+						questions.add(null);
 				}
-				questions.set(index, data[1]);
+				
+				//Create the node in the binary tree and place it at the index
+				questions.set(index, new Node(question));
 			}
+			
 			br.close();
-		}
+			
+			//Assign the new root node
+			if (questions.size() > 1) {
+	            tree.root = questions.get(1);
+	        }
+			//Root node at position 1 rather than 0 for placeholding
+			//Link nodes based on binary tree relationships
+			for (int i = 1; i < questions.size(); i++)
+			{
+				Node node = questions.get(i);
+				if (node != null)
+				{
+					if (2 * i < questions.size() && questions.get(2 * i) != null) 
+					{
+						node.yes = questions.get(2 * i);
+						//This is the left "child" of the binary tree
+					} //end nested if
+					if (2 * i + 1 < questions.size() && questions.get(2 * i + 1) != null) 
+					{
+						node.no = questions.get(2 * i + 1);
+						//This is the right "child" of the new binary tree
+					} //end nested else if
+				} //end if
+			} // end for loop
+		}// end try
 		catch (IOException e)
 		{
 			System.out.println("File Read Error: " + dataFile);
