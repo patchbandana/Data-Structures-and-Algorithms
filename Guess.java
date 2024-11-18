@@ -24,13 +24,16 @@ public class Guess {
 		Scanner scanner = new Scanner(System.in);
 		//tree.root.question = "Elephant";
 		String dataFile = "data.csv";
-		importTree(tree, dataFile);
 		
 		if (tree.root == null) {
 		    // Fallback: initialize with a default node if the root is missing
 		    System.out.println("Root node not found in data file, initializing default root node.");
-		    tree.root = new Node("Elephant");  // Default initial question or animal
+		    tree.root = new Node("1,Elephant");  // Default initial question or animal
 		}
+		
+		importTree(tree, dataFile);
+		
+
 		
 		Node current = tree.root;
 
