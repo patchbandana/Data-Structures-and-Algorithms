@@ -6,7 +6,7 @@
  * 
  */
 public class Tree {
-	Node root = new Node("");
+	Node root = new Node("Elephant");
 
 	public boolean isLeaf(Node node)
 	{
