@@ -3,6 +3,8 @@
  * Purpose: To practice the data structure, "Stack".
  */
 
+package war;
+
 /**The Stack class: push, pop, empty, notEmpty
  */
 public class Stack {

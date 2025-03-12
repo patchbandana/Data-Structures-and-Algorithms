@@ -3,6 +3,8 @@
  * Purpose: To encapsulate the Card object for playing War
  */
 
+package war;
+
 /**Card class. Must contain 13 numerical values in 4 suits.
  */
 public class Card {
