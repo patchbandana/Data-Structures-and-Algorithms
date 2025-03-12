@@ -3,299 +3,401 @@
  * Purpose: To create the card game war as a text based program.
  */
 
+package war;
+
 import java.util.Random;
-/**The card game of War
+import java.util.Scanner;
+
+/**
+ * Modified War game to support multiple players without ArrayLists or HashMaps.
+ * Now prompts the user for the number of players before starting.
  */
 public class War {
+    public static int numberOfPlayers; // Determined by user input
+    public static int numberOfCards = 52;
+    public static int round = 0;
+    public static int maxRound = 10000; // Increased max rounds
+    
+    // Arrays to track card counts from previous rounds for stalemate detection
+    public static int[] previousPlayerCardCounts;
+    public static int[] previousWinCardCounts;
+    public static int noChangeCounter = 0; // To detect stalemates
 
-	public static String p1Name = "P1";
-	public static String p2Name = "P2";
-	public static int numberOfPlayers = 2;
-	public static int numberOfCards = 52;
-	public static int round = 0;
-	public static int maxRound = 999;
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter number of players (minimum 2): ");
+        numberOfPlayers = Math.max(2, scanner.nextInt()); // Ensure at least 2 players
+        scanner.close();
 
-	/**The main program for initiating War game, creates stacks
-	 * and initiates the the deck.
-	 * @param args NOT USED
-	 */
-	public static void main(String[] args) {
-		boolean running = true;
-		//Declare a new Deck of Cards of standard size
-		Card[] deck = new Card[numberOfCards];
-		//Makes a deck of cards
-		deck = makeDeck(numberOfCards);
-		//Shuffles cards in Deck
-		shuffle(deck);
-		shuffle(deck);
-		shuffle(deck);
-		shuffle(deck);
+        // Initialize arrays to track card counts for stalemate detection
+        previousPlayerCardCounts = new int[numberOfPlayers];
+        previousWinCardCounts = new int[numberOfPlayers];
 
-		//Player 1 and 2 Stacks
-		Stack p1stack = new Stack();
-		Stack p2stack = new Stack();
+        boolean running = true;
+        Card[] deck = makeDeck(numberOfCards);
+        shuffle(deck);
 
-		//Winning condition stacks
-		Stack w1stack = new Stack();
-		Stack w2stack = new Stack();
+        // Create stacks for players
+        Stack[] playerStacks = new Stack[numberOfPlayers];
+        Stack[] winStacks = new Stack[numberOfPlayers];
+        
+        for (int i = 0; i < numberOfPlayers; i++) {
+            playerStacks[i] = new Stack();
+            winStacks[i] = new Stack();
+        }
 
-		/*Deals out the entire deck to both players equally, one player gets odds
-			and the other even numbered cards*/
-		deal(deck, p1stack, p2stack);
+        // Deal cards evenly among all players
+        deal(deck, playerStacks);
 
-		System.out.println("### P1 STACK:");
-		printStack(p1stack);
-		System.out.println("### P2 STACK:");
-		printStack(p2stack);
+        // Initialize previous card counts
+        updateCardCountArrays(playerStacks, winStacks);
 
-		while (running && round < maxRound) 
-		{
-			System.out.println("### ROUND " + round);
-			playHands(p1stack, p2stack, w1stack, w2stack);
-			checkEmpty(p1stack, w1stack, p1Name, p2Name);
-			checkEmpty(p2stack, w2stack, p2Name, p1Name);
-		}
-		
-		if (round >= maxRound)
-		{
-			System.out.println("It's a draw. :/");
-		}
-	}
+        while (running && round < maxRound) {
+            System.out.println("### ROUND " + (round + 1));
+            
+            // Save the current state of card counts before playing
+            int[] beforePlayerCounts = new int[numberOfPlayers];
+            int[] beforeWinCounts = new int[numberOfPlayers];
+            
+            for (int i = 0; i < numberOfPlayers; i++) {
+                beforePlayerCounts[i] = countCards(playerStacks[i]);
+                beforeWinCounts[i] = countCards(winStacks[i]);
+            }
+            
+            playHands(playerStacks, winStacks);
+            checkElimination(playerStacks, winStacks);
+            
+            // Check if card counts changed after this round
+            boolean cardCountsChanged = false;
+            
+            for (int i = 0; i < numberOfPlayers; i++) {
+                int currentPlayerCount = countCards(playerStacks[i]);
+                int currentWinCount = countCards(winStacks[i]);
+                
+                // If counts changed for any player, card distribution changed
+                if (currentPlayerCount != beforePlayerCounts[i] || 
+                    currentWinCount != beforeWinCounts[i]) {
+                    cardCountsChanged = true;
+                    break;
+                }
+            }
+            
+            // Update the stalemate detection logic
+            if (!cardCountsChanged) {
+                noChangeCounter++;
+                System.out.println("No change in card distribution for " + noChangeCounter + " consecutive rounds.");
+                
+                if (noChangeCounter >= 10) {
+                    System.out.println("Detected a stalemate - no change in card distribution for 10 consecutive rounds.");
+                    System.out.println("Game ends in a draw.");
+                    running = false;
+                }
+            } else {
+                // Reset the counter if distribution changed
+                if (noChangeCounter > 0) {
+                    System.out.println("Card distribution changed, resetting stalemate counter.");
+                }
+                noChangeCounter = 0;
+                
+                // Update previous card counts
+                updateCardCountArrays(playerStacks, winStacks);
+            }
+            
+            // Check for a winner
+            int activePlayers = 0;
+            int lastActivePlayer = -1;
+            
+            for (int i = 0; i < numberOfPlayers; i++) {
+                if (!playerStacks[i].empty() || !winStacks[i].empty()) {
+                    activePlayers++;
+                    lastActivePlayer = i;
+                }
+            }
+            
+            if (activePlayers == 1) {
+                System.out.println("Player " + (lastActivePlayer + 1) + " wins the game!");
+                running = false;
+            } else if (activePlayers == 0) {
+                System.out.println("No players left with cards. It's a draw.");
+                running = false;
+            }
+        }
+        
+        if (round >= maxRound) {
+            System.out.println("Maximum rounds reached. It's a draw.");
+            
+            // Display remaining card counts for each player
+            System.out.println("Final card counts:");
+            for (int i = 0; i < numberOfPlayers; i++) {
+                int playerCards = countCards(playerStacks[i]);
+                int winCards = countCards(winStacks[i]);
+                System.out.printf("Player %d: %d cards\n", i + 1, playerCards + winCards);
+            }
+        }
+    }
 
-	private static Card[] makeDeck(int numberOfCards) {
-		//Creates an array of Card objects called deck
-		Card[] deck = new Card[numberOfCards];
+    /**
+     * Updates the arrays used to track card counts for stalemate detection
+     */
+    private static void updateCardCountArrays(Stack[] playerStacks, Stack[] winStacks) {
+        for (int i = 0; i < numberOfPlayers; i++) {
+            previousPlayerCardCounts[i] = countCards(playerStacks[i]);
+            previousWinCardCounts[i] = countCards(winStacks[i]);
+        }
+    }
 
-		int cardIndex = 0;
-		//Checks for which suit the card is
-		for (int suit = 0; suit <= 3; suit++)
-		{
-			String n = "";
-			char symbol = ' ';
+    private static Card[] makeDeck(int numberOfCards) {
+        Card[] deck = new Card[numberOfCards];
+        int index = 0;
+        char[] suits = {'♠', '♦', '♣', '❤'};
+        for (char suit : suits) {
+            for (int val = 2; val <= 14; val++) {
+                String number = switch (val) {
+                    case 11 -> "J";
+                    case 12 -> "Q";
+                    case 13 -> "K";
+                    case 14 -> "A";
+                    default -> String.valueOf(val);
+                };
+                deck[index++] = new Card(number, suit, val);
+            }
+        }
+        return deck;
+    }
 
-			symbol = switch (suit) {
-			case 0 -> '\u2660'; // SPADE
-			case 1 -> '\u2666'; // DIAMOND
-			case 2 -> '\u2663'; // CLUB
-			case 3 -> '\u2764'; // HEART
-			default -> ' ';
-			};
+    private static void shuffle(Card[] deck) {
+        Random random = new Random();
+        for (int i = deck.length - 1; i > 0; i--) {
+            int randomIndex = random.nextInt(i + 1);
+            Card temp = deck[randomIndex];
+            deck[randomIndex] = deck[i];
+            deck[i] = temp;
+        }
+    }
 
-			for(int val = 2; val <= 14; val++)
-			{
-				n = switch (val) {
-				case 11 -> "J";
-				case 12 -> "Q";
-				case 13 -> "K";
-				case 14 -> "A";
-				default -> "" + val;
-				};
-				Card card = new Card(n, symbol, val);
-				deck[cardIndex] = card;
-				cardIndex++;
-			}
-		}
-		return deck;
-	}
-	public static void shuffle(Card[] deck) {
-		Random random = new Random();
+    /**
+     * Counts the number of cards in a stack
+     * @param stack The stack to count
+     * @return The number of cards in the stack
+     */
+    private static int countCards(Stack stack) {
+        if (stack.empty()) {
+            return 0;
+        }
+        
+        int count = 0;
+        Card current = stack.head;
+        while (current != null) {
+            count++;
+            current = current.getNext();
+        }
+        return count;
+    }
 
-		for (int i = 0; i < deck.length; i++) {
-			int randomIndex = random.nextInt(deck.length);
-			Card temp = deck[randomIndex];
-			deck[randomIndex] = deck[i];
-			deck[i] = temp;
-		}
-	}
+    private static void deal(Card[] deck, Stack[] playerStacks) {
+        for (int i = 0; i < deck.length; i++) {
+            playerStacks[i % numberOfPlayers].push(deck[i]);
+        }
+    }
 
-	public static void deal(Card[] deck, Stack p1stack, Stack p2stack) {
-		for (var i = 0; i < deck.length; i += 2) {
-			Card c1 = deck[i];
-			Card c2 = deck[i + 1];
+    private static void playHands(Stack[] playerStacks, Stack[] winStacks) {
+        round++;
+        Stack playedCards = new Stack();
+        
+        // Check if any players can play
+        boolean canPlay = false;
+        for (int i = 0; i < numberOfPlayers; i++) {
+            if (playerStacks[i].notEmpty() || winStacks[i].notEmpty()) {
+                canPlay = true;
+                break;
+            }
+        }
+        
+        if (!canPlay) return;
+        
+        // Ensure all players who need cards move them from win stack to play stack
+        for (int i = 0; i < numberOfPlayers; i++) {
+            if (playerStacks[i].empty() && winStacks[i].notEmpty()) {
+                System.out.printf("Player %d reshuffling win pile into play pile\n", i + 1);
+                while (winStacks[i].notEmpty()) {
+                    playerStacks[i].push(winStacks[i].pop());
+                }
+            }
+        }
+        
+        // Play cards
+        int highestValue = -1;
+        Stack tiedPlayers = new Stack();
+        
+        for (int i = 0; i < numberOfPlayers; i++) {
+            if (playerStacks[i].notEmpty()) {
+                Card played = playerStacks[i].pop();
+                played.setNext(null); // Ensure the card is disconnected from others
+                playedCards.push(played);
+                System.out.printf("Player %d: %s%s\n", i + 1, played.getNumber(), played.getSuit());
+                
+                if (played.getValue() > highestValue) {
+                    highestValue = played.getValue();
+                    tiedPlayers = new Stack(); // Reset tied players
+                    tiedPlayers.push(new Card("", (char) (i + '0'), highestValue));
+                } else if (played.getValue() == highestValue) {
+                    tiedPlayers.push(new Card("", (char) (i + '0'), highestValue));
+                }
+            }
+        }
+        
+        if (tiedPlayers.empty()) return; // No valid play
+        
+        // Check for a war (tie)
+        int tiedPlayerCount = countCards(tiedPlayers);
+        
+        if (tiedPlayerCount > 1) {
+            System.out.println("WAR! Players tied with value: " + highestValue);
+            handleWar(tiedPlayers, playerStacks, winStacks, playedCards);
+        } else {
+            // No war, determine winner
+            Card winnerCard = tiedPlayers.pop();
+            int winner = winnerCard.getSuit() - '0';
+            
+            System.out.printf("Player %d wins this round with value %d!\n", 
+                             winner + 1, winnerCard.getValue());
+            
+            // Winner gets all cards
+            while (playedCards.notEmpty()) {
+                Card card = playedCards.pop();
+                card.setNext(null); // Ensure card is disconnected
+                winStacks[winner].push(card);
+            }
+        }
+    }
 
-			p1stack.push(c1);
-			p2stack.push(c2);
-		}
-	}
+    private static void handleWar(Stack tiedPlayers, Stack[] playerStacks, Stack[] winStacks, Stack warPile) {
+        // Copy tied players to a new stack for processing
+        Stack warPlayers = new Stack();
+        while (tiedPlayers.notEmpty()) {
+            warPlayers.push(tiedPlayers.pop());
+        }
+        
+        // Create a new stack for players who can continue the war
+        Stack activeTiedPlayers = new Stack();
+        
+        // Have tied players put down a face-down card if able
+        while (warPlayers.notEmpty()) {
+            int playerIndex = warPlayers.pop().getSuit() - '0';
+            
+            // Make sure player has cards; if not, try to refill from win stack
+            if (playerStacks[playerIndex].empty() && winStacks[playerIndex].notEmpty()) {
+                System.out.printf("Player %d reshuffling win pile into play pile during war\n", playerIndex + 1);
+                while (winStacks[playerIndex].notEmpty()) {
+                    playerStacks[playerIndex].push(winStacks[playerIndex].pop());
+                }
+            }
+            
+            if (playerStacks[playerIndex].notEmpty()) {
+                Card faceDown = playerStacks[playerIndex].pop();
+                faceDown.setNext(null);
+                warPile.push(faceDown);
+                System.out.printf("Player %d places a face-down card for war\n", playerIndex + 1);
+                
+                // This player can continue in the war
+                activeTiedPlayers.push(new Card("", (char) (playerIndex + '0'), 0));
+            } else {
+                System.out.printf("Player %d cannot continue in the war (no cards)\n", playerIndex + 1);
+            }
+        }
+        
+        // Now have the still-tied players play a face-up card
+        Stack newTiedPlayers = new Stack();
+        int highestValue = -1;
+        
+        while (activeTiedPlayers.notEmpty()) {
+            int playerIndex = activeTiedPlayers.pop().getSuit() - '0';
+            
+            if (playerStacks[playerIndex].notEmpty()) {
+                Card faceUp = playerStacks[playerIndex].pop();
+                faceUp.setNext(null);
+                warPile.push(faceUp);
+                System.out.printf("Player %d plays %s%s for war\n", 
+                                 playerIndex + 1, faceUp.getNumber(), faceUp.getSuit());
+                
+                if (faceUp.getValue() > highestValue) {
+                    highestValue = faceUp.getValue();
+                    newTiedPlayers = new Stack();
+                    newTiedPlayers.push(new Card("", (char) (playerIndex + '0'), highestValue));
+                } else if (faceUp.getValue() == highestValue) {
+                    newTiedPlayers.push(new Card("", (char) (playerIndex + '0'), highestValue));
+                }
+            }
+        }
+        
+        // Check the result of this war round
+        if (newTiedPlayers.empty()) {
+            // No players were able to play - split the cards among players still in the game
+            System.out.println("War ended with no clear winner. Splitting cards.");
+            distributeWarCards(warPile, playerStacks, winStacks);
+            return;
+        }
+        
+        int tiedPlayerCount = countCards(newTiedPlayers);
+        
+        if (tiedPlayerCount > 1) {
+            // Another tie; continue the war
+            System.out.println("War continues! Still tied with value: " + highestValue);
+            handleWar(newTiedPlayers, playerStacks, winStacks, warPile);
+        } else {
+            // War is resolved; winner takes all
+            int winner = newTiedPlayers.pop().getSuit() - '0';
+            System.out.printf("Player %d wins the war with value %d!\n", winner + 1, highestValue);
+            
+            while (warPile.notEmpty()) {
+                Card card = warPile.pop();
+                card.setNext(null);
+                winStacks[winner].push(card);
+            }
+        }
+    }
+    
+    private static void distributeWarCards(Stack warPile, Stack[] playerStacks, Stack[] winStacks) {
+        // Find all active players
+        boolean[] activePlayers = new boolean[numberOfPlayers];
+        int activeCount = 0;
+        
+        for (int i = 0; i < numberOfPlayers; i++) {
+            activePlayers[i] = !playerStacks[i].empty() || !winStacks[i].empty();
+            if (activePlayers[i]) {
+                activeCount++;
+            }
+        }
+        
+        if (activeCount == 0) return;
+        
+        // Distribute the war cards among active players
+        int cardIndex = 0;
+        while (warPile.notEmpty()) {
+            Card card = warPile.pop();
+            
+            // Find the next active player
+            int playerIndex;
+            int count = 0;
+            do {
+                playerIndex = cardIndex % numberOfPlayers;
+                cardIndex++;
+                count++;
+                if (count > numberOfPlayers) break; // Safety check
+            } while (!activePlayers[playerIndex]);
+            
+            if (count <= numberOfPlayers) {
+                card.setNext(null);
+                winStacks[playerIndex].push(card);
+            }
+        }
+    }
 
-	private static void playHands(Stack p1stack, Stack p2stack, Stack w1stack, Stack w2stack) {
-		checkEmpty(p1stack, w1stack, p1Name, p2Name);
-		checkEmpty(p2stack, w2stack, p2Name, p1Name);
-		round++;
-		Card c1 = p1stack.pop();
-		Card c2 = p2stack.pop();
-
-		System.out.printf(
-				"%s%s\t%s%s\n",
-				c1.getNumber(),
-				c1.getSuit(),
-				c2.getNumber(),
-				c2.getSuit());
-
-		int valP1 = c1.getValue();
-		int valP2 = c2.getValue();
-		Stack getAll = new Stack();
-
-		if (valP1 > valP2) {
-			// Push to P1's collection.
-			System.out.println(" ^");
-			w1stack.push(c1);
-			w1stack.push(c2);
-			System.out.println(p1Name + " +2 CARDS");
-		} else if (valP1 < valP2) {
-			// Push to P2's collection.
-			System.out.println("\t^");
-			w2stack.push(c2);
-			w2stack.push(c1);
-			System.out.println(p2Name + " +2 CARDS");
-		} else {
-			// We have a tie!
-			System.out.println("We have a tie!");
-			System.out.println("THIS");
-			System.out.println("MEANS");
-			System.out.println("WAR!!");
-			boolean playing = true;
-			while (playing)
-			{
-				checkEmpty(p1stack, w1stack, p1Name, p2Name);
-				checkEmpty(p2stack, w2stack, p2Name, p1Name);
-				
-				getAll.push(c1);
-				getAll.push(c2);
-
-				checkEmpty(p1stack, w1stack, p1Name, p2Name);
-				checkEmpty(p2stack, w2stack, p2Name, p1Name);
-				Card t1 = p1stack.pop();
-				Card t2 = p2stack.pop();
-				getAll.push(t2);
-				getAll.push(t1);
-
-				System.out.printf(
-						"%s%s\t%s%s\n",
-						t1.getNumber(),
-						t1.getSuit(),
-						t2.getNumber(),
-						t2.getSuit());
-
-				checkEmpty(p1stack, w1stack, p1Name, p2Name);
-				checkEmpty(p2stack, w2stack, p2Name, p1Name);
-				Card t3 = p2stack.pop();
-				Card t4 = p1stack.pop();
-
-				getAll.push(t4);
-				getAll.push(t3);
-
-
-				System.out.printf(
-						"%s%s\t%s%s\n",
-						t3.getNumber(),
-						t3.getSuit(),
-						t4.getNumber(),
-						t4.getSuit());
-
-				checkEmpty(p1stack, w1stack, p1Name, p2Name);
-				checkEmpty(p2stack, w2stack, p2Name, p1Name);
-				Card t6 = p1stack.pop();
-				Card t5 = p2stack.pop();
-
-				valP1 = t6.getValue();
-				valP2 = t5.getValue();
-
-				System.out.printf(
-						"%s%s\t%s%s\n",
-						t6.getNumber(),
-						t6.getSuit(),
-						t5.getNumber(),
-						t5.getSuit());
-
-				if (valP1 > valP2) {
-					// Push to P1's collection.
-					System.out.println(" ^");
-					moveStack(getAll, w1stack);
-					w1stack.push(t5);
-					w1stack.push(t6);
-					System.out.println(p1Name + " +8 CARDS");
-					playing = false;
-				} else if (valP1 < valP2) {
-					// Push to P2's collection.
-					System.out.println("\t^");
-					moveStack(getAll, w2stack);
-					w2stack.push(t6);
-					w2stack.push(t5);
-					System.out.println(p2Name + " +8 CARDS");
-					playing = false;
-				} else {
-					// We have a tie!
-					playing = false;
-					System.out.println("We have another tie!");
-					checkEmpty(p1stack, w1stack, p1Name, p2Name);
-					checkEmpty(p2stack, w2stack, p2Name, p1Name);
-					playHands(p1stack, p2stack, w1stack, w2stack);
-				}
-			}
-		}
-	}
-
-	/**
-	 * This method checks whether a player has lost the game.
-	 * If their pstack is empty but their wstack is not, then
-	 * the win stack is flipped onto the play stack.
-	 *
-	 * This method can terminate the program.
-	 *
-	 * @param pstack:       Player's play stack.
-	 * @param wstack:       Player's win stack.
-	 * @param playerName:   Player's name.
-	 * @param opponentName: Opponent's name.
-	 */
-	private static void checkEmpty(Stack pstack, Stack wstack, String playerName, String opponentName) {
-		if (pstack.empty() && wstack.empty()) {
-			System.out.println("Player " + playerName + " is out of cards!");
-			System.out.println("Player " + opponentName + " wins the game!");
-			System.out.println("Terminating the program. :)");
-			System.exit(0); // EXIT.
-		} else if (pstack.empty()) {
-			System.out.println("Flipping stack for " + playerName + ".");
-			int i = 0;
-			while (wstack.notEmpty()) {
-				i++;
-				Card card = (Card) wstack.pop();
-				pstack.push(card);
-			}
-			System.out.println(playerName + " CARDS REMAINING: " + i);
-		}
-	}
-
-	/** UNUSED
-	 * Moves cards from one stack to another.
-	 *
-	 * @param from: Stack to move from.
-	 * @param to:   Stack to move to.
-	 */
-	private static void moveStack(Stack from, Stack to) {
-		while (from.notEmpty()) {
-			Card card = from.pop();
-			to.push(card);
-		}
-	}
-
-	/**
-	 * Prints a stack without altering it.
-	 *
-	 * @param stack
-	 */
-	private static void printStack(Stack stack) {
-		Stack acc = new Stack();
-		while (stack.notEmpty()) {
-			Card c = stack.pop();
-			System.out.println(c.getNumber() + c.getSuit());
-			acc.push(c);
-		}
-
-		while (acc.notEmpty()) {
-			Card c = acc.pop();
-			stack.push(c);
-		}
-	}
-
+    private static void checkElimination(Stack[] playerStacks, Stack[] winStacks) {
+        for (int i = 0; i < numberOfPlayers; i++) {
+            if (playerStacks[i].empty() && winStacks[i].empty()) {
+                System.out.printf("Player %d is out of the game!\n", i + 1);
+            }
+        }
+    }
 }
